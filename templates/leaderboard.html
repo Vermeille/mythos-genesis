@@ -22,15 +22,15 @@
     <h1>Training Leaderboard</h1>
     <table>
         <tr>
-            <th>Student Name</th>
             <th>Accuracy</th>
+            <th>Student Name</th>
             <th>Tag</th>
             <th>Timestamp</th>
         </tr>
         {% for entry in training_leaderboard %}
         <tr>
-            <td>{{ entry.student_name }}</td>
             <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+            <td>{{ entry.student_name }}</td>
             <td>{{ entry.tag }}</td>
             <td>{{ entry.timestamp }}</td>
         </tr>
@@ -40,14 +40,14 @@
     <h1>Test Leaderboard</h1>
     <table>
         <tr>
-            <th>Student Name</th>
             <th>Accuracy</th>
+            <th>Student Name</th>
             <th>Submission Time</th>
         </tr>
         {% for entry in test_leaderboard %}
         <tr>
-            <td>{{ entry.student_name }}</td>
             <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+            <td>{{ entry.student_name }}</td>
             <td>{{ entry.submission_time }}</td>
         </tr>
         {% endfor %}
