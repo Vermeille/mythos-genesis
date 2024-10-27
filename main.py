@@ -1,4 +1,20 @@
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Body, Request
+from datetime import datetime, timedelta
+import logging
+import shutil
+import os
+import uuid
+import json
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    UploadFile,
+    File,
+    Body,
+    Request,
+    status,
+    Form,
+)
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy import (
     create_engine,
@@ -9,14 +25,11 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Text,
+    JSON,
 )
 from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
-from datetime import datetime, timedelta
-import shutil
-import os
-import uuid
-import json
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
@@ -50,7 +63,8 @@ class Student(Base):
     name = Column(String)
     token = Column(String, unique=True)
 
-    training_submissions = relationship("TrainingSubmission", back_populates="student")
+    training_submissions = relationship(
+        "TrainingSubmission", back_populates="student")
     test_submissions = relationship("TestSubmission", back_populates="student")
 
 
@@ -225,7 +239,8 @@ def submit_test(
 def get_leaderboard(db: Session = Depends(get_db)):
     # Get training submissions
     training_entries = (
-        db.query(TrainingSubmission).order_by(TrainingSubmission.accuracy.desc()).all()
+        db.query(TrainingSubmission).order_by(
+            TrainingSubmission.accuracy.desc()).all()
     )
     training_leaderboard = [
         {
@@ -261,7 +276,8 @@ def get_leaderboard(db: Session = Depends(get_db)):
 def read_leaderboard(request: Request, db: Session = Depends(get_db)):
     # Get training submissions
     training_entries = (
-        db.query(TrainingSubmission).order_by(TrainingSubmission.accuracy.desc()).all()
+        db.query(TrainingSubmission).order_by(
+            TrainingSubmission.accuracy.desc()).all()
     )
     training_leaderboard = [
         {
