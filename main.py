@@ -114,7 +114,8 @@ def get_current_student(
     token = credentials.credentials
     student = db.query(Student).filter(Student.token == token).first()
     if student is None:
-        raise HTTPException(status_code=401, detail="Invalid authentication token")
+        raise HTTPException(
+            status_code=401, detail="Invalid authentication token")
     return student
 
 
