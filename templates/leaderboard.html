@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaderboard</title>
+    <style>
+        table {
+            width: 80%;
+            margin-bottom: 50px;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #aaa;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        h1 {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Training Leaderboard</h1>
+    <table>
+        <tr>
+            <th>Student Name</th>
+            <th>Accuracy</th>
+            <th>Tag</th>
+            <th>Timestamp</th>
+        </tr>
+        {% for entry in training_leaderboard %}
+        <tr>
+            <td>{{ entry.student_name }}</td>
+            <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+            <td>{{ entry.tag }}</td>
+            <td>{{ entry.timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h1>Test Leaderboard</h1>
+    <table>
+        <tr>
+            <th>Student Name</th>
+            <th>Accuracy</th>
+            <th>Submission Time</th>
+        </tr>
+        {% for entry in test_leaderboard %}
+        <tr>
+            <td>{{ entry.student_name }}</td>
+            <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+            <td>{{ entry.submission_time }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+
