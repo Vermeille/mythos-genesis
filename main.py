@@ -187,10 +187,16 @@ def submit_training(
 # Endpoint for students to submit test predictions (limited to 1 per day)
 @app.post("/test_submission")
 def submit_test(
-    predictions: UploadFile = File(...),
+    predictions: str = Form(...),
     student: Student = Depends(get_current_student),
     db: Session = Depends(get_db),
 ):
+    try:
+        predictions = json.loads(predictions)
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=400, detail="Invalid JSON format in predictions"
+        )
     # Check for submission limit
     one_day_ago = datetime.utcnow() - timedelta(days=1)
     recent_submission = (
@@ -211,23 +217,13 @@ def submit_test(
     pred_dir = os.path.join("submissions", "test", str(student.id))
     os.makedirs(pred_dir, exist_ok=True)
     predictions_file_path = os.path.join(pred_dir, f"{submission_id}.json")
-    with open(predictions_file_path, "wb") as buffer:
-        shutil.copyfileobj(predictions.file, buffer)
-    predictions.file.close()
-
-    # Load the student's predictions
-    try:
-        with open(predictions_file_path, "r") as f:
-            student_predictions = json.load(f)
-    except json.JSONDecodeError:
-        raise HTTPException(
-            status_code=400, detail="Invalid JSON format in predictions file"
-        )
+    with open(predictions_file_path, "w") as buffer:
+        json.dump(predictions, buffer)
 
     # Compute accuracy
     correct = 0
     for file, true_label in reference_test.items():
-        correct += int(true_label == student_predictions.get(file, [None])[0])
+        correct += int(true_label == predictions.get(file, [None])[0])
     accuracy = correct / len(reference_test)
 
     # Create a new test submission record
