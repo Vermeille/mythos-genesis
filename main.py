@@ -121,7 +121,12 @@ def get_current_student(
 
 # Endpoint to generate tokens (Teacher)
 @app.post("/generate_token")
-def generate_token(name: str = Body(...), db: Session = Depends(get_db)):
+def generate_token(name: str = Body(..., embed=True), db: Session = Depends(get_db)):
+    # check if the student already exists
+    student = db.query(Student).filter(Student.name == name).first()
+    if student:
+        return {"name": student.name, "token": student.token}
+
     token = str(uuid.uuid4())
     student = Student(name=name, token=token)
     db.add(student)
