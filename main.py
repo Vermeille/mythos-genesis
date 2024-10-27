@@ -310,12 +310,29 @@ def read_leaderboard(request: Request, db: Session = Depends(get_db)):
         for submission in test_entries
     ]
 
+    # Prepare data for the line plot
+    # Group submissions by student
+    student_submissions = {}
+    submissions = db.query(TestSubmission).order_by(
+        TestSubmission.timestamp).all()
+    for submission in submissions:
+        student_name = submission.student.name
+        if student_name not in student_submissions:
+            student_submissions[student_name] = []
+        student_submissions[student_name].append(
+            {
+                "timestamp": submission.timestamp.isoformat(),
+                "accuracy": submission.accuracy,
+            }
+        )
+
     return templates.TemplateResponse(
         "leaderboard.html",
         {
             "request": request,
             "training_leaderboard": training_leaderboard,
             "test_leaderboard": test_leaderboard,
+            "student_submissions": student_submissions,
         },
     )
 

@@ -1,57 +1,143 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Leaderboard</title>
+
     <style>
-        table {
-            width: 80%;
-            margin-bottom: 50px;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #aaa;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        h1 {
-            margin-top: 50px;
-        }
+    table {
+      width: 80%;
+      margin-bottom: 50px;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    h1 {
+      margin-top: 50px;
+    }
     </style>
-</head>
-<body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
+  </head>
+  <body>
+    <canvas id="accuracyChart" width="800" height="400"></canvas>
     <h1>Training Leaderboard</h1>
     <table>
-        <tr>
-            <th>Accuracy</th>
-            <th>Student Name</th>
-            <th>Tag</th>
-            <th>Timestamp</th>
-        </tr>
-        {% for entry in training_leaderboard %}
-        <tr>
-            <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
-            <td>{{ entry.student_name }}</td>
-            <td>{{ entry.tag }}</td>
-            <td>{{ entry.timestamp }}</td>
-        </tr>
-        {% endfor %}
+      <tr>
+        <th>Accuracy</th>
+        <th>Student Name</th>
+        <th>Tag</th>
+        <th>Timestamp</th>
+      </tr>
+      {% for entry in training_leaderboard %}
+      <tr>
+        <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+        <td>{{ entry.student_name }}</td>
+        <td>{{ entry.tag }}</td>
+        <td>{{ entry.timestamp }}</td>
+      </tr>
+      {% endfor %}
     </table>
 
     <h1>Test Leaderboard</h1>
     <table>
-        <tr>
-            <th>Accuracy</th>
-            <th>Student Name</th>
-            <th>Submission Time</th>
-        </tr>
-        {% for entry in test_leaderboard %}
-        <tr>
-            <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
-            <td>{{ entry.student_name }}</td>
-            <td>{{ entry.submission_time }}</td>
-        </tr>
-        {% endfor %}
+      <tr>
+        <th>Accuracy</th>
+        <th>Student Name</th>
+        <th>Submission Time</th>
+      </tr>
+      {% for entry in test_leaderboard %}
+      <tr>
+        <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+        <td>{{ entry.student_name }}</td>
+        <td>{{ entry.submission_time }}</td>
+      </tr>
+      {% endfor %}
     </table>
-</body>
+    <!-- JavaScript to render the chart -->
+    <script>
+    // Retrieve the data passed from the server
+    const studentSubmissions = {{ student_submissions | tojson }};
+
+    // Prepare datasets for Chart.js
+    const datasets = [];
+    for (const [studentName, submissions] of Object.entries(studentSubmissions)) {
+      const dataPoints = submissions.map(submission => ({
+        x: new Date(submission.timestamp),
+        y: submission.accuracy * 100  // Convert to percentage
+      }));
+
+      datasets.push({
+        label: studentName,
+        data: dataPoints,
+        fill: false,
+        borderColor: getRandomColor(),
+        tension: 0.1
+      });
+    }
+
+    // Function to generate random colors
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    // Create the chart
+    const ctx = document.getElementById('accuracyChart').getContext('2d');
+    const accuracyChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: datasets
+      },
+      options: {
+        lineTension: 0.,
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              tooltipFormat: 'YYYY-MM-DD HH:mm',
+              displayFormats: {
+                hour: 'MMM D, hA',
+                day: 'MMM D'
+              }
+            },
+            title: {
+              display: true,
+              text: 'Submission Time'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Accuracy (%)'
+            },
+            beginAtZero: true,
+            max: 100
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '%';
+              }
+            }
+          }
+        }
+      }
+    });
+    </script>
+  </body>
 </html>
 
