@@ -1,5 +1,7 @@
-from datetime import datetime, timedelta
+from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, status
 import logging
+from datetime import datetime, timedelta
 import shutil
 import os
 import uuid
@@ -12,7 +14,6 @@ from fastapi import (
     File,
     Body,
     Request,
-    status,
     Form,
 )
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -24,7 +25,6 @@ from sqlalchemy import (
     Float,
     DateTime,
     ForeignKey,
-    Text,
     JSON,
 )
 from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
@@ -340,6 +340,16 @@ def download_code(submission_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Code file not found")
 
     return FileResponse(path=code_zip_path, filename=os.path.basename(code_zip_path))
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
+    logging.error(f"{request}: {exc_str}")
+    content = {"status_code": 10422, "message": exc_str, "data": None}
+    return JSONResponse(
+        content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+    )
 
 
 # Create directories if they don't exist
