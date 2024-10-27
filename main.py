@@ -198,12 +198,12 @@ def submit_test(
             status_code=400, detail="Invalid JSON format in predictions"
         )
     # Check for submission limit
-    one_day_ago = datetime.utcnow() - timedelta(days=1)
+    limit = datetime.utcnow() - timedelta(hours=12)
     recent_submission = (
         db.query(TestSubmission)
         .filter(
             TestSubmission.student_id == student.id,
-            TestSubmission.timestamp >= one_day_ago,
+            TestSubmission.timestamp >= limit,
         )
         .first()
     )
