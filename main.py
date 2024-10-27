@@ -119,24 +119,40 @@ def get_current_student(
     return student
 
 
-# Endpoint to generate tokens (Teacher)
-@app.post("/generate_token")
-def generate_token(name: str = Body(..., embed=True), db: Session = Depends(get_db)):
-    # check if the student already exists
+def ensure_teacher(teacher: Student = Depends(get_current_student)):
+    if teacher is None or teacher.name != "Teacher":
+        raise HTTPException(
+            status_code=401, detail="Invalid authentication token")
+    return teacher
+
+
+def create_student(db: Session, name: str, token: str):
     student = db.query(Student).filter(Student.name == name).first()
     if student:
-        return {"name": student.name, "token": student.token}
+        return student
 
-    token = str(uuid.uuid4())
     student = Student(name=name, token=token)
     db.add(student)
     db.commit()
     db.refresh(student)
+    return student
+
+
+# Endpoint to generate tokens (Teacher)
+@app.post("/generate_token")
+def generate_token(
+    name: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    teacher: Student = Depends(ensure_teacher),
+):
+    # check if the student already exists
+    token = str(uuid.uuid4())
+    student = create_student(db, name, token)
     return {"name": student.name, "token": student.token}
 
 
 @app.get("/tokens")
-def tokens(db: Session = Depends(get_db)):
+def tokens(db: Session = Depends(get_db), teacher: Student = Depends(ensure_teacher)):
     students = db.query(Student).all()
     return [{"name": student.name, "token": student.token} for student in students]
 
@@ -283,32 +299,9 @@ def get_leaderboard(db: Session = Depends(get_db)):
 @app.get("/", response_class=HTMLResponse)
 def read_leaderboard(request: Request, db: Session = Depends(get_db)):
     # Get training submissions
-    training_entries = (
-        db.query(TrainingSubmission).order_by(
-            TrainingSubmission.accuracy.desc()).all()
-    )
-    training_leaderboard = [
-        {
-            "student_name": submission.student.name,
-            "accuracy": submission.accuracy,
-            "tag": submission.tag,
-            "timestamp": submission.timestamp,
-        }
-        for submission in training_entries
-    ]
-
-    # Get test submissions, ordered by accuracy
-    test_entries = (
-        db.query(TestSubmission).order_by(TestSubmission.accuracy.desc()).all()
-    )
-    test_leaderboard = [
-        {
-            "student_name": submission.student.name,
-            "accuracy": submission.accuracy,
-            "submission_time": submission.timestamp,
-        }
-        for submission in test_entries
-    ]
+    leaderboard = get_leaderboard(db)
+    training_leaderboard = leaderboard["training_leaderboard"]
+    test_leaderboard = leaderboard["test_leaderboard"]
 
     # Prepare data for the line plot
     # Group submissions by student
@@ -339,7 +332,11 @@ def read_leaderboard(request: Request, db: Session = Depends(get_db)):
 
 # Endpoint for teacher to download code submissions
 @app.get("/download_code/{submission_id}")
-def download_code(submission_id: int, db: Session = Depends(get_db)):
+def download_code(
+    submission_id: int,
+    db: Session = Depends(get_db),
+    teacher: Student = Depends(ensure_teacher),
+):
     submission = (
         db.query(TrainingSubmission)
         .filter(TrainingSubmission.id == submission_id)
@@ -369,3 +366,4 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 os.makedirs("submissions/training", exist_ok=True)
 os.makedirs("submissions/test", exist_ok=True)
 os.makedirs("templates", exist_ok=True)
+create_student(SessionLocal(), "Teacher", os.environ["TEACHER_TOKEN"])
