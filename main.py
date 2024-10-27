@@ -74,7 +74,7 @@ class TrainingSubmission(Base):
     student_id = Column(Integer, ForeignKey("students.id"))
     accuracy = Column(Float)
     loss = Column(Float)
-    hyperparameters = Column(Text)
+    hyperparameters = Column(JSON)
     code_zip_path = Column(String)
     pid = Column(Integer)
     tag = Column(String)
@@ -138,16 +138,22 @@ def tokens(db: Session = Depends(get_db)):
 # Endpoint for students to submit training information
 @app.post("/train_submission")
 def submit_training(
-    accuracy: float = Body(...),
-    loss: float = Body(...),
-    hyperparameters: dict = Body(...),
-    pid: int = Body(...),
-    tag: str = Body(...),
+    accuracy: float = Form(...),
+    loss: float = Form(...),
+    hyperparameters: str = Form(...),
+    pid: int = Form(...),
+    tag: str = Form(...),
     code_zip: UploadFile = File(...),
     student: Student = Depends(get_current_student),
     db: Session = Depends(get_db),
 ):
     # Save the uploaded code zip file
+    try:
+        hyperparameters = json.loads(hyperparameters)
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=400, detail="Invalid JSON format in hyperparameters"
+        )
     submission_id = str(uuid.uuid4())
     code_dir = os.path.join("submissions", "training", str(student.id))
     os.makedirs(code_dir, exist_ok=True)
