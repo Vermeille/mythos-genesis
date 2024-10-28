@@ -177,7 +177,7 @@ def submit_training(
             status_code=400, detail="Invalid JSON format in hyperparameters"
         )
     submission_id = str(uuid.uuid4())
-    code_dir = os.path.join("submissions", "training", str(student.id))
+    code_dir = os.path.join("submissions", "training", str(student.name))
     os.makedirs(code_dir, exist_ok=True)
     code_zip_path = os.path.join(code_dir, f"{submission_id}.zip")
     with open(code_zip_path, "wb") as buffer:
@@ -230,7 +230,7 @@ def submit_test(
 
     # Save the predictions file
     submission_id = str(uuid.uuid4())
-    pred_dir = os.path.join("submissions", "test", str(student.id))
+    pred_dir = os.path.join("submissions", "test", str(student.name))
     os.makedirs(pred_dir, exist_ok=True)
     predictions_file_path = os.path.join(pred_dir, f"{submission_id}.json")
     with open(predictions_file_path, "w") as buffer:
