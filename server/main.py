@@ -63,8 +63,7 @@ class Student(Base):
     name = Column(String)
     token = Column(String, unique=True)
 
-    training_submissions = relationship(
-        "TrainingSubmission", back_populates="student")
+    training_submissions = relationship("TrainingSubmission", back_populates="student")
     test_submissions = relationship("TestSubmission", back_populates="student")
 
 
@@ -114,15 +113,13 @@ def get_current_student(
     token = credentials.credentials
     student = db.query(Student).filter(Student.token == token).first()
     if student is None:
-        raise HTTPException(
-            status_code=401, detail="Invalid authentication token")
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
     return student
 
 
 def ensure_teacher(teacher: Student = Depends(get_current_student)):
     if teacher is None or teacher.name != "Teacher":
-        raise HTTPException(
-            status_code=401, detail="Invalid authentication token")
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
     return teacher
 
 
@@ -223,7 +220,7 @@ def submit_test(
         )
         .first()
     )
-    if recent_submission:
+    if recent_submission and not student.name == "Teacher":
         raise HTTPException(
             status_code=400, detail="Test submission limit reached for today"
         )
@@ -263,8 +260,7 @@ def submit_test(
 def get_leaderboard(db: Session = Depends(get_db)):
     # Get training submissions
     training_entries = (
-        db.query(TrainingSubmission).order_by(
-            TrainingSubmission.accuracy.desc()).all()
+        db.query(TrainingSubmission).order_by(TrainingSubmission.accuracy.desc()).all()
     )
     training_leaderboard = [
         {
@@ -306,8 +302,7 @@ def read_leaderboard(request: Request, db: Session = Depends(get_db)):
     # Prepare data for the line plot
     # Group submissions by student
     student_submissions = {}
-    submissions = db.query(TestSubmission).order_by(
-        TestSubmission.timestamp).all()
+    submissions = db.query(TestSubmission).order_by(TestSubmission.timestamp).all()
     for submission in submissions:
         student_name = submission.student.name
         if student_name not in student_submissions:
