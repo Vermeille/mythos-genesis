@@ -145,11 +145,18 @@ if __name__ == "__main__":
     print("Training Submission Response:", training_response)
 
     # Submit test predictions
-    predictions_file_path = "/path/to/predictions.json"
+    preds = {
+        "img0.png": [random.randint(0, 2)],
+        "img1.png": [random.randint(0, 2)],
+        "img2.png": [2],
+        "img3.png": [random.randint(0, 4)],
+        "img4.png": [random.randint(2, 5)],
+    }
     try:
-        test_response = submit_test(json.load(open("student_test.json")))
+        test_response = submit_test(preds)
         print("Test Submission Response:", test_response)
-    except:
+    except Exception as e:
+        print(e)
         print("Error submitting test predictions")
 
     # View leaderboard
