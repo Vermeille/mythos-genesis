@@ -74,18 +74,25 @@
         label: studentName,
         data: dataPoints,
         fill: false,
-        borderColor: getRandomColor(),
+        borderColor: getColor(studentName),
         tension: 0.1
       });
     }
 
-    // Function to generate random colors
-    function getRandomColor() {
-      const letters = '0123456789ABCDEF';
-      let color = '#';
-      for (let i = 0; i < 6; i++ ) {
-        color += letters[Math.floor(Math.random() * 16)];
+    function getColor(str) {
+      // Hash the string using a simple hash function
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
+
+      // Convert the hash to a hexadecimal color code
+      let color = '#';
+      for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xFF;
+        color += ('00' + value.toString(16)).substr(-2);
+      }
+
       return color;
     }
 
