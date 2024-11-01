@@ -7,13 +7,11 @@ import os
 import uuid
 import json
 from fastapi import (
-    FastAPI,
     Depends,
     HTTPException,
     UploadFile,
     File,
     Body,
-    Request,
     Form,
 )
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -29,7 +27,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
