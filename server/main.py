@@ -65,6 +65,10 @@ class Student(Base):
     training_submissions = relationship("TrainingSubmission", back_populates="student")
     test_submissions = relationship("TestSubmission", back_populates="student")
 
+    @property
+    def is_teacher(self):
+        return self.name == "Teacher"
+
 
 class TrainingSubmission(Base):
     __tablename__ = "training_submissions"
@@ -108,7 +112,7 @@ def get_db():
 def get_current_student(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
-):
+) -> Student | None:
     token = credentials.credentials
     student = db.query(Student).filter(Student.token == token).first()
     if student is None:
@@ -116,8 +120,8 @@ def get_current_student(
     return student
 
 
-def ensure_teacher(teacher: Student = Depends(get_current_student)):
-    if teacher is None or teacher.name != "Teacher":
+def ensure_teacher(teacher: Student = Depends(ensure_current_student)):
+    if teacher is None or not teacher.is_teacher:
         raise HTTPException(status_code=401, detail="Invalid authentication token")
     return teacher
 
@@ -219,7 +223,7 @@ def submit_test(
         )
         .first()
     )
-    if recent_submission and not student.name == "Teacher":
+    if recent_submission and not student.is_teacher:
         raise HTTPException(
             status_code=400, detail="Test submission limit reached for today"
         )
