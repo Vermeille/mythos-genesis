@@ -45,10 +45,11 @@ security = HTTPBearer()
 try:
     with open("reference_test.json", "r") as f:
         reference_test = json.load(f)
-    reference_labels = {}
+    reference_labels = set(reference_test.values())
+    print("labels:", ", ".join(reference_labels))
 except FileNotFoundError:
-    reference_labels = {}
     print("reference_test.json not found. Test submissions will not be evaluated.")
+    reference_test = {}
 
 # Templates setup
 templates = Jinja2Templates(directory="templates")
@@ -234,7 +235,22 @@ def submit_test(
     # Compute accuracy
     correct = 0
     for file, true_label in reference_test.items():
-        correct += int(true_label == predictions.get(file, [None])[0])
+        if file not in predictions:
+            return HTTPException(
+                status_code=400, detail="Missing prediction for file " + file
+            )
+        prob = predictions[file]
+
+        if len(prob) != len(reference_labels):
+            return HTTPException(
+                status_code=400,
+                detail="Invalid prediction format for file "
+                + file
+                + " - invalid number of labels",
+            )
+
+        pred = max(prob.items(), key=lambda x: x[1])[0]
+        correct += int(true_label == pred)
     accuracy = correct / len(reference_test)
 
     # Create a new test submission record
