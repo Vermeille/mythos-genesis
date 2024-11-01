@@ -24,6 +24,11 @@
   </head>
   <body>
     <canvas id="accuracyChart" width="800" height="400"></canvas>
+    {% if student %}
+      <p>Hello {{ student.name }}</p>
+    {% else %}
+      <input type="text" placeholder="Token" id="token"><button onclick="login()">Login</button>
+    {% endif %}
     <h1>Training Leaderboard</h1>
     <table>
       <tr>
@@ -144,6 +149,12 @@
         }
       }
     });
+
+    function login() {
+      document.cookie = `token=${document.getElementById('token').value}`;
+      // reload the page
+      window.location.reload();
+    }
     </script>
   </body>
 </html>

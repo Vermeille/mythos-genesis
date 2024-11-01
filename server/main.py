@@ -369,6 +369,7 @@ def read_leaderboard(
         "leaderboard.html",
         {
             "request": request,
+            "student": student,
             "training_leaderboard": training_leaderboard,
             "test_leaderboard": test_leaderboard,
             "student_submissions": student_submissions,
