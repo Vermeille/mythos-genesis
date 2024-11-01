@@ -23,10 +23,11 @@ def _get_current_notebook():
             lines = []
             for cell in nb_json["cells"]:
                 if cell["cell_type"] == "code":
-                    lines.append("#############")
-                    lines.append("### CELL ####")
-                    lines.append("#############")
+                    lines.append("\n#############")
+                    lines.append("\n### CELL ####")
+                    lines.append("\n#############\n")
                     lines.extend(cell["source"])
+                    lines.append("\n")
             return "".join(lines)
         else:
             print("Can't get notebook JSON")
