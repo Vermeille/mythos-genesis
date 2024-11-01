@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, Request, status
 import logging
@@ -7,6 +8,7 @@ import os
 import uuid
 import json
 from fastapi import (
+    Cookie,
     Depends,
     HTTPException,
     UploadFile,
@@ -279,11 +281,26 @@ def submit_test(
 
 # Endpoint to view the leaderboard in JSON format
 @app.get("/leaderboard")
-def get_leaderboard(db: Session = Depends(get_db)):
+def get_leaderboard(
+    db: Session = Depends(get_db),
+    student: Student | None = Depends(get_current_student),
+):
     # Get training submissions
-    training_entries = (
-        db.query(TrainingSubmission).order_by(TrainingSubmission.accuracy.desc()).all()
-    )
+    if student is None:
+        training_entries = []
+    elif student.is_teacher:
+        training_entries = (
+            db.query(TrainingSubmission)
+            .order_by(TrainingSubmission.accuracy.desc())
+            .all()
+        )
+    else:
+        training_entries = (
+            db.query(TrainingSubmission)
+            .filter(TrainingSubmission.student_id == student.id)
+            .order_by(TrainingSubmission.accuracy.desc())
+            .all()
+        )
     training_leaderboard = [
         {
             "student_name": submission.student.name,
@@ -313,11 +330,23 @@ def get_leaderboard(db: Session = Depends(get_db)):
     }
 
 
+def cookie_auth(
+    db: Session = Depends(get_db), token: Annotated[str | None, Cookie()] = None
+):
+    if token is None:
+        return None
+    return db.query(Student).filter(Student.token == token).first()
+
+
 # Root endpoint to view the leaderboard in HTML format
 @app.get("/", response_class=HTMLResponse)
-def read_leaderboard(request: Request, db: Session = Depends(get_db)):
+def read_leaderboard(
+    request: Request,
+    db: Session = Depends(get_db),
+    student: Student | None = Depends(cookie_auth),
+):
     # Get training submissions
-    leaderboard = get_leaderboard(db)
+    leaderboard = get_leaderboard(db, student)
     training_leaderboard = leaderboard["training_leaderboard"]
     test_leaderboard = leaderboard["test_leaderboard"]
 
