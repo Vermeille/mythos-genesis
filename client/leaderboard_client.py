@@ -131,42 +131,11 @@ def download_code(submission_id, save_path):
 
 # Usage examples
 if __name__ == "__main__":
-    # Generate a token
-    token_response = generate_token("Teacher")
-    os.environ["LEADERBOARD_TOKEN"] = token_response["token"]
-    print("Token Response:", token_response)
-    token = token_response["token"]
+    import sys
 
-    # Submit training data
-    accuracy = 0.95 + 0.05 * random.random()
-    loss = 0.05
-    hyperparameters = {"learning_rate": 0.001}
-    tag = "First run"
-    training_response = submit_training(accuracy, loss, hyperparameters, tag)
-    print("Training Submission Response:", training_response)
-
-    # Submit test predictions
-    preds = {
-        "img0.png": [random.randint(0, 2)],
-        "img1.png": [random.randint(0, 2)],
-        "img2.png": [2],
-        "img3.png": [random.randint(0, 4)],
-        "img4.png": [random.randint(2, 5)],
-    }
-    try:
-        test_response = submit_test(preds)
-        print("Test Submission Response:", test_response)
-    except Exception as e:
-        print(e)
-        print("Error submitting test predictions")
-
-    # View leaderboard
-    leaderboard = view_leaderboard()
-    print("Leaderboard:", json.dumps(leaderboard, indent=2))
-
-    # Download code submission
-    submission_id = training_response.get("submission_id")
-    save_path = "./downloads"
-    os.makedirs(save_path, exist_ok=True)
-    downloaded_file = download_code(submission_id, save_path)
-    print(f"Downloaded code to {downloaded_file}")
+    if sys.argv[1] == "generate_token":
+        print(generate_token(sys.argv[2]))
+    elif sys.argv[1] == "submit_test":
+        print(submit_test(json.load(open(sys.argv[2]))))
+    elif sys.argv[1] == "download_code":
+        print(download_code(sys.argv[2], sys.argv[3]))
