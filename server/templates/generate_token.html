@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Generate Token</title>
+  </head>
+  <body>
+    <p>The token will be displayed only once. COPY IT SOMEWHERE ELSE BEFORE CLOSING THE WINDOW.</p>
+    <p>Enter your name to generate a token:</p>
+    <input type="text" id="name" placeholder="Name"><button onclick="generateToken()">Generate Token</button>
+    <p id="token"></p>
+    <script>
+      function generateToken() {
+        fetch('/generate_token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: document.getElementById('name').value
+          })
+        }).then(response => response.json()).then(data => {
+          document.getElementById('token').innerText = 'Token: ' + data.token;
+        });
+      }
+    </script>
+  </body>
+</html>

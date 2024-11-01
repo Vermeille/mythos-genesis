@@ -42,6 +42,7 @@ Base = declarative_base()
 
 # Security
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 # Load reference test labels
 try:
@@ -112,15 +113,22 @@ def get_db():
 
 # Authentication dependency
 def get_current_student(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(optional_security),
     db: Session = Depends(get_db),
 ) -> Student | None:
+    if credentials is None:
+        return None
     token = credentials.credentials
     student = db.query(Student).filter(Student.token == token).first()
     return student
 
 
-def ensure_current_student(student: Student | None = Depends(get_current_student)):
+def ensure_current_student(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+) -> Student | None:
+    token = credentials.credentials
+    student = db.query(Student).filter(Student.token == token).first()
     if student is None:
         raise HTTPException(status_code=401, detail="Invalid authentication token")
     return student
@@ -135,13 +143,13 @@ def ensure_teacher(teacher: Student = Depends(ensure_current_student)):
 def create_student(db: Session, name: str, token: str):
     student = db.query(Student).filter(Student.name == name).first()
     if student:
-        return student
+        return student, False
 
     student = Student(name=name, token=token)
     db.add(student)
     db.commit()
     db.refresh(student)
-    return student
+    return student, True
 
 
 # Endpoint to generate tokens (Teacher)
@@ -149,12 +157,22 @@ def create_student(db: Session, name: str, token: str):
 def generate_token(
     name: str = Body(..., embed=True),
     db: Session = Depends(get_db),
-    teacher: Student = Depends(ensure_teacher),
+    student: Student | None = Depends(get_current_student),
 ):
-    # check if the student already exists
+    if name == "Teacher":
+        raise HTTPException(status_code=400, detail="Nice try.")
+
     token = str(uuid.uuid4())
-    student = create_student(db, name, token)
-    return {"name": student.name, "token": student.token}
+    new_student, created = create_student(db, name, token)
+    if created or (student is not None and student.is_teacher):
+        return {"name": new_student.name, "token": new_student.token}
+    else:
+        return {"name": new_student.name}
+
+
+@app.get("/generate_token.html")
+def view_generate_token(request: Request):
+    return templates.TemplateResponse("generate_token.html", {"request": request})
 
 
 @app.get("/tokens")

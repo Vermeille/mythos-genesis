@@ -27,7 +27,8 @@
     {% if student %}
       <p>Hello {{ student.name }}</p>
     {% else %}
-      <input type="text" placeholder="Token" id="token"><button onclick="login()">Login</button>
+      <input type="text" placeholder="Token" id="token"><button onclick="login()">Login</button><br>
+      <a href="/generate_token.html">Generate Token</a><br>
     {% endif %}
     <h1>Training Leaderboard</h1>
     <table>
