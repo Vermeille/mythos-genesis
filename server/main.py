@@ -115,6 +115,10 @@ def get_current_student(
 ) -> Student | None:
     token = credentials.credentials
     student = db.query(Student).filter(Student.token == token).first()
+    return student
+
+
+def ensure_current_student(student: Student | None = Depends(get_current_student)):
     if student is None:
         raise HTTPException(status_code=401, detail="Invalid authentication token")
     return student
@@ -166,7 +170,7 @@ def submit_training(
     pid: int = Form(...),
     tag: str = Form(...),
     code_zip: UploadFile = File(...),
-    student: Student = Depends(get_current_student),
+    student: Student = Depends(ensure_current_student),
     db: Session = Depends(get_db),
 ):
     # Save the uploaded code zip file
@@ -204,7 +208,7 @@ def submit_training(
 @app.post("/test_submission")
 def submit_test(
     predictions: str = Form(...),
-    student: Student = Depends(get_current_student),
+    student: Student = Depends(ensure_current_student),
     db: Session = Depends(get_db),
 ):
     try:
