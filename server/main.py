@@ -175,6 +175,11 @@ def view_generate_token(request: Request):
     return templates.TemplateResponse("generate_token.html", {"request": request})
 
 
+@app.get("/instructions.html")
+def view_generate_token(request: Request):
+    return templates.TemplateResponse("instructions.html", {"request": request})
+
+
 @app.get("/tokens")
 def tokens(db: Session = Depends(get_db), teacher: Student = Depends(ensure_teacher)):
     students = db.query(Student).all()

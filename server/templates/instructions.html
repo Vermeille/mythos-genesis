@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Instructions</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <body>
+    <pre style="white-space: pre-wrap; display: none;" id="md">
+# Fantasy NIST
+
+Le concours est prêt. Il sera actif jusqu' à la fin du module. Votre note sera directement influencée par votre accuracy sur le test set.
+
+## Faisabilité
+- Il m'a fallu 30 minutes de travail pour atteindre une accuracy de 97% sans trop forcer (pas de recherche d'hyper paramètres, d'architecture, etc) donc c'est clairement très faisable.
+- Il m'a fallu 1h30 pour atteindre 87% d'accuracy en supprimant le seul truc un peu intelligent qui était fait pour obtenir 97%. C'est clairement faisable.
+
+## Règles:
+- Have fun. Mes tests ayant été menés sur Colab avec des training de ~15min de training chacun, il est très clair que le compute n'est *pas* un avantage. Il n'y a donc aucune limite ou contrainte de compute.
+- Vous POUVEZ manipuler vos données comme vous le souhaitez (filtrage, ajout, processing, découpage du dataset, ...) et utiliser tous les outils que vous souhaiterez.
+- Vous ne DEVEZ PAS annoter manuellement les données de test ou entraîner dessus (je le saurai)
+- Vous DEVEZ utiliser les fonctions du leaderboard_client pour log vos training runs pour que je puisse voir votre progression et les techniques utilisées. C'est de toute façon vivement conseillé pour vos suivis, d'y log vos hyper paramètres, epochs, etc.
+- Vous DEVEZ utiliser le leaderboard_client pour soumettre vos tests (sinon j'ai pas vos scores... donc vous avez pas de note)
+- Les soumissions de test sont limité à une fois toutes les 12h, c'est beaucoup. Donc ne soyez pas avares, testez !
+- **Groupes de 1** (mais ça n'interdit pas la communication)
+
+## Mise en place:
+Il faudra générer votre token à partir de votre nom depuis le site.
+
+Dans un notebook, votre première cellule est (n'oubliez pas le token)
+
+```python
+!wget https://cloud.vermeille.fr/s/36dOOpeBn7aIvcZ/download -O download.zip
+!unzip download.zip &> /dev/null
+!wget https://raw.githubusercontent.com/Vermeille/leaderboard/refs/heads/master/client/leaderboard_client.py
+
+import os
+os.environ['LEADERBOARD_TOKEN'] = 'YOUR_TOKEN'
+import leaderboard_client as lb
+```
+
+Vous POUVEZ aussi utiliser des scripts python en local, et vous devrez évidemment faire les téléchargement en dehors du script, à la main.
+
+Vous DEVER utiliser aussi souvent la fonction de soumission de train:
+
+```python
+lb.submit_training(train_acc, train_loss, {"num_epochs": num_epochs, "lr": lr, "something_else": 12}, tag=f"super net epoch {epoch}")
+```
+
+Vous pouvez, une fois toutes les 12h, soumettre un test
+
+```
+all_preds = {"file1.png": {"storm": -3.32, "doctorstrange": 0.2, ...}, ...}
+lb.submit_test(all_preds)
+```
+
+La soumission de test DOIT:
+- être un dictionnaire donc les clés sont les noms de fichier du test set, et auquel est associé...
+- ... un dictionnaire dont chaque clé est le nom de classe et la valeur est le *logit* prédit par le réseau. Toutes les classes doivent être présentes.
+- Cf exemple
+- J'insiste sur *logit*, sans softmax, donc.
+
+Vous trouverez le résultat de vos soumissions, et de celles du reste de la classe, sur https://leaderboard.vermeille.fr/ . N'oubliez pas d'entrer votre token !
+
+## Note sur la triche:
+* Toute triche avérée multipliera immédiatement votre note par 0. Je n'aime pas _du tout_ qu'on se foute de ma gueule.
+* Triche == copier-coller de code entre vous, 0 soumission de train, 1 seule soumission de test, soumission de test avec de fausses valeurs, soumissions de test identique à un camarade.
+* Je reste disponible en quasi permanence pour répondre à vos questions et vous aider, la triche est impardonnable.
+    </pre>
+  <div id="content"></div>
+  <script>
+    document.getElementById('content').innerHTML = marked.parse(document.getElementById('md').innerText);
+  </script>
+  </body>
+</html>
