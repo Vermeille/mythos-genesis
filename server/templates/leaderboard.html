@@ -74,7 +74,7 @@
     for (const [studentName, submissions] of Object.entries(studentSubmissions)) {
       const dataPoints = submissions.map(submission => ({
         x: new Date(submission.timestamp),
-        y: submission.accuracy * 100  // Convert to percentage
+        y: 100 - submission.accuracy * 100  // Convert to percentage
       }));
 
       datasets.push({
@@ -82,23 +82,25 @@
         data: dataPoints,
         fill: false,
         borderColor: getColor(studentName),
-        tension: 0.1
+        tension: 0.1,
+        pointRadius: 10,
       });
     }
 
     function getColor(str) {
       // Hash the string using a simple hash function
-      let hash = 0;
+      let hash = 0
       for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        hash = str.charCodeAt(i) * 7 + ((hash << 5) - hash);
       }
 
       // Convert the hash to a hexadecimal color code
       let color = '#';
       for (let i = 0; i < 3; i++) {
         const value = (hash >> (i * 8)) & 0xFF;
-        color += ('00' + value.toString(16)).substr(-2);
+        color += value.toString(16).substr(-2);
       }
+      console.log(str, color);
 
       return color;
     }
@@ -130,10 +132,11 @@
           y: {
             title: {
               display: true,
-              text: 'Accuracy (%)'
+              text: 'Error (%)'
             },
             //beginAtZero: true,
-            max: 100
+            min: 0,
+            type: 'logarithmic',
           }
         },
         plugins: {
