@@ -82,6 +82,9 @@ def submit_training(accuracy, loss, hyperparameters, tag):
         code = _get_current_notebook()
         if code:
             files = {"code_zip": code}
+        else:
+            print("WARNING: couldn't get the content of the notebook. Try restarting it?")
+            files = {"code_zip": ""}
     else:
         files = {"code_zip": _current_python_to_zip()}
 
