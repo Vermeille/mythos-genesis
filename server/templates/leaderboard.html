@@ -33,36 +33,46 @@
     {% endif %}
     <h1>Training Leaderboard</h1>
     <table>
-      <tr>
-        <th>Accuracy</th>
-        <th>Student Name</th>
-        <th>Tag</th>
-        <th>Timestamp</th>
-      </tr>
+      <thead>
+        <tr>
+          <th onclick="sortTable(this, 0)">Accuracy <a href="#">(sort)</a></th>
+          <th>Student Name</th>
+          <th>Tag</th>
+          <th onclick="sortTable(this, 3)">Timestamp <a href="#">(sort)</a></th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody>
       {% for entry in training_leaderboard %}
-      <tr>
-        <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
-        <td>{{ entry.student_name }}</td>
-        <td>{{ entry.tag }}</td>
-        <td>{{ entry.timestamp }}</td>
-      </tr>
+        <tr>
+          <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+          <td>{{ entry.student_name }}</td>
+          <td>{{ entry.tag }}</td>
+          <td>{{ entry.timestamp }}</td>
+          <td><a href="/download_code/{{ entry.id }}">Download</a></td>
+        </tr>
       {% endfor %}
+      </tbody>
     </table>
 
     <h1>Test Leaderboard</h1>
     <table>
-      <tr>
-        <th>Accuracy</th>
-        <th>Student Name</th>
-        <th>Submission Time</th>
-      </tr>
-      {% for entry in test_leaderboard %}
-      <tr>
-        <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
-        <td>{{ entry.student_name }}</td>
-        <td>{{ entry.submission_time }}</td>
-      </tr>
-      {% endfor %}
+      <thead>
+        <tr>
+          <th onclick="sortTable(this, 0)">Accuracy <a href="#">(sort)</a></th>
+          <th>Student Name</th>
+          <th onclick="sortTable(this, 2)">Timestamp <a href="#">(sort)</a></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in test_leaderboard %}
+        <tr>
+          <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+          <td>{{ entry.student_name }}</td>
+          <td>{{ entry.submission_time }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
     <!-- JavaScript to render the chart -->
     <script>
@@ -156,7 +166,10 @@
     });
 
     function login() {
-      document.cookie = `token=${document.getElementById('token').value}`;
+      const token = document.getElementById('token').value;
+      const date = new Date();
+      date.setFullYear(date.getFullYear() + 1);
+      document.cookie = `token=${token}; expires=${date.toUTCString()}; path=/`;
       // reload the page
       window.location.reload();
     }
