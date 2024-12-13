@@ -173,6 +173,37 @@
       // reload the page
       window.location.reload();
     }
+
+
+    function sortTable(header, columnIndex) {
+      const table = header.closest("table"); // Get the table element
+      const tableBody = table.querySelector("tbody");
+      const rows = Array.from(tableBody.rows);
+
+      // Save the current scroll position
+      const scrollY = window.scrollY;
+
+      // Toggle sorting order
+      const isAsc = header.dataset.order === "asc";
+      header.dataset.order = isAsc ? "desc" : "asc";
+
+      rows.sort((a, b) => {
+        const cellA = a.cells[columnIndex].innerText.trim();
+        const cellB = b.cells[columnIndex].innerText.trim();
+        const isNumeric = !isNaN(cellA) && !isNaN(cellB);
+
+        if (isNumeric) {
+          return isAsc ? cellB - cellA : cellA - cellB;
+        } else {
+          return isAsc ? cellB.localeCompare(cellA) : cellA.localeCompare(cellB);
+        }
+      });
+
+      tableBody.append(...rows);
+
+      // Restore the scroll position
+      window.scrollTo(0, scrollY);
+    }
     </script>
   </body>
 </html>
