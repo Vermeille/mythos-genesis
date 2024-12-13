@@ -326,6 +326,7 @@ def get_leaderboard(
         )
     training_leaderboard = [
         {
+            "id": submission.id,
             "student_name": submission.student.name,
             "accuracy": submission.accuracy,
             "tag": submission.tag,
@@ -405,13 +406,16 @@ def read_leaderboard(
 def download_code(
     submission_id: int,
     db: Session = Depends(get_db),
-    teacher: Student = Depends(ensure_teacher),
+    teacher: Student = Depends(cookie_auth),
 ):
     submission = (
         db.query(TrainingSubmission)
         .filter(TrainingSubmission.id == submission_id)
         .first()
     )
+    if teacher.id != submission.student_id and teacher.name != "Teacher":
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
+
     if submission is None:
         raise HTTPException(status_code=404, detail="Submission not found")
 
