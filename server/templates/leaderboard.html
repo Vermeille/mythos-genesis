@@ -45,7 +45,7 @@
       <tbody>
       {% for entry in training_leaderboard %}
         <tr>
-          <td>{{ '%.2f' % (entry.accuracy * 100) }}%</td>
+          <td>{{ '%.2f' % ((entry.accuracy * 100) if entry.accuracy < 1 else entry.accuracy) }}%</td>
           <td>{{ entry.student_name }}</td>
           <td>{{ entry.tag }}</td>
           <td>{{ entry.timestamp }}</td>
