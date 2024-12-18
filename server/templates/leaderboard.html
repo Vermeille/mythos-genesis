@@ -84,7 +84,7 @@
     for (const [studentName, submissions] of Object.entries(studentSubmissions)) {
       const dataPoints = submissions.map(submission => ({
         x: new Date(submission.timestamp),
-        y: 100 - submission.accuracy * 100  // Convert to percentage
+        y: 100 - submission.accuracy * 100,  // Convert to percentage
       }));
 
       datasets.push({
@@ -137,17 +137,23 @@
             title: {
               display: true,
               text: 'Submission Time'
-            }
+            },
           },
           y: {
             title: {
               display: true,
-              text: 'Error (%)'
+              text: 'Error % (Grade/20)'
             },
             //beginAtZero: true,
             min: 0,
             type: 'logarithmic',
-          }
+            ticks: {
+              callback: function(value) {
+                //return `${value}`;
+                return `${value}% (${Math.max(0, (20 - 20 * (value / 100) ** 0.5)).toFixed(1)})`;
+              }
+            }
+          },
         },
         plugins: {
           legend: {
@@ -157,7 +163,7 @@
           tooltip: {
             callbacks: {
               label: function(context) {
-                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '%';
+                return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}% (${(20 - 20 * (context.parsed.y / 100) ** 0.5).toFixed(2)}/20)`;
               }
             }
           }
