@@ -24,6 +24,8 @@
   </head>
   <body>
     <canvas id="accuracyChart" width="800" height="400"></canvas>
+    <button id="toggleScale">Toggle linear / log scale</button>
+    <hr>
     <a href="/instructions.html">Instructions</a><br>
     {% if student %}
       <p>Hello {{ student.name }}</p>
@@ -117,6 +119,7 @@
 
     // Create the chart
     const ctx = document.getElementById('accuracyChart').getContext('2d');
+    let yAxisType = 'logarithmic'; // Default to logarithmic
     const accuracyChart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -146,7 +149,7 @@
             },
             //beginAtZero: true,
             min: 0,
-            type: 'logarithmic',
+            type: yAxisType,
             ticks: {
               callback: function(value) {
                 //return `${value}`;
@@ -210,6 +213,12 @@
       // Restore the scroll position
       window.scrollTo(0, scrollY);
     }
+
+    document.getElementById('toggleScale').addEventListener('click', () => {
+      yAxisType = yAxisType === 'logarithmic' ? 'linear' : 'logarithmic';
+      accuracyChart.options.scales.y.type = yAxisType;
+      accuracyChart.update();
+    });
     </script>
   </body>
 </html>
