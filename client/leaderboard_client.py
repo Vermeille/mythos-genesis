@@ -3,6 +3,9 @@ import random
 import requests
 import json
 import os
+from PIL import Image
+from io import BytesIO
+
 
 try:
     from google.colab import _message
@@ -83,7 +86,9 @@ def submit_training(accuracy, loss, hyperparameters, tag):
         if code:
             files = {"code_zip": code}
         else:
-            print("WARNING: couldn't get the content of the notebook. Try restarting it?")
+            print(
+                "WARNING: couldn't get the content of the notebook. Try restarting it?"
+            )
             files = {"code_zip": ""}
     else:
         files = {"code_zip": _current_python_to_zip()}
@@ -130,6 +135,16 @@ def download_code(submission_id, save_path):
         f.write(response.content)
 
     return full_path
+
+
+def render(tag, tokens):
+    assert len(tokens) == 67
+    encoded = tag.replace(" ", "_") + " " + \
+        " ".join([str(t) for t in tokens.tolist()])
+    img = requests.get(f"{URL}/generate-images/", params=dict(codes=encoded))
+    b = BytesIO(img.content)
+    pil = Image.open(b)
+    return pil
 
 
 # Usage examples

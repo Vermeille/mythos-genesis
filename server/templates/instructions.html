@@ -10,66 +10,109 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <body>
+    <img src="https://cloud.vermeille.fr/s/3QGpKv9uTL26xNb/download" width="40%">
     <pre style="white-space: pre-wrap; display: none;" id="md">
-# Fantasy NIST
+# MYTHOS: Genesis
+## Mastering Your Tokenized Heroes with Optimized Sequences
 
-Le concours est prêt. Il sera actif jusqu' à la fin du module. Votre note sera directement influencée par votre accuracy sur le test set.
+### Overview
+In this exam, you will work on **reimplementing and retraining the transformer component** of the PARTI
+(Pathways Autoregressive Text-to-Image) generator ([blog](https://sites.research.google/parti/), [paper](https://arxiv.org/abs/2206.10789)). For simplicity, we will focus solely on the transformer
+and remove text conditioning. You will train the model to predict the next image token based on previous
+tokens in an autoregressive manner.
 
-## Faisabilité
-- Il m'a fallu 30 minutes de travail pour atteindre une accuracy de 97% sans trop forcer (pas de recherche d'hyper paramètres, d'architecture, etc) donc c'est clairement très faisable.
-- Il m'a fallu 1h30 pour atteindre 87% d'accuracy en supprimant le seul truc un peu intelligent qui était fait pour obtenir 97%. C'est clairement faisable.
+PARTI being quite a hard paper, you can instead read this one: [Autoregressive Model Beats Diffusion: Llama for Scalable Image Generation](https://arxiv.org/abs/2406.06525)
 
-## Règles:
-- Have fun. Mes tests ayant été menés sur Colab avec des training de ~15min de training chacun, il est très clair que le compute n'est *pas* un avantage. Il n'y a donc aucune limite ou contrainte de compute.
-- Vous POUVEZ manipuler vos données comme vous le souhaitez (filtrage, ajout, processing, découpage du dataset, ...) et utiliser tous les outils que vous souhaiterez.
-- Vous ne DEVEZ PAS annoter manuellement les données de test ou entraîner dessus (je le saurai)
-- Vous DEVEZ utiliser les fonctions du leaderboard_client pour log vos training runs pour que je puisse voir votre progression et les techniques utilisées. C'est de toute façon vivement conseillé pour vos suivis, d'y log vos hyper paramètres, epochs, etc.
-- Vous DEVEZ utiliser le leaderboard_client pour soumettre vos tests (sinon j'ai pas vos scores... donc vous avez pas de note)
-- Les soumissions de test sont limité à une fois toutes les 12h, c'est beaucoup. Donc ne soyez pas avares, testez !
-- **Groupes de 1** (mais ça n'interdit pas la communication)
+---
 
-## Mise en place:
-Il faudra générer votre token à partir de votre nom depuis le site.
+### Objectives
+1. **Rewrite the Transformer:**
+   - Implement the transformer architecture from scratch. You're allowed scaled_dot_product_attention from pytorch.
+   - Include features like multi-head attention, feed-forward layers, and positional encodings.
+   - There is no text conditioning so this a transformer decoder only.
 
-Dans un notebook, votre première cellule est (n'oubliez pas le token)
+2. **Train the Transformer:**
+   - Train your rewritten transformer to model the image generation process as an autoregressive task.
+   - Use provided image tokens from a pre-tokenized dataset for training.
 
-```python
-!wget https://cloud.vermeille.fr/s/36dOOpeBn7aIvcZ/download -O download.zip
-!unzip download.zip &> /dev/null
-!wget https://raw.githubusercontent.com/Vermeille/leaderboard/refs/heads/master/client/leaderboard_client.py
+3. **Evaluate the Transformer:**
+   - Measure the quality of the trained model by assessing the likelihood of token sequences on a validation set.
+   - Optionally, generate images by sampling tokens from the trained model.
 
-import os
-os.environ['LEADERBOARD_TOKEN'] = 'YOUR_TOKEN'
-import leaderboard_client as lb
+---
+
+### Dataset
+You are provided with **a pre-tokenized image dataset:** This dataset contains image sequences tokenized into discrete codes using a VQ-VAE.
+
+[LINK TO DATASET](https://files.vermeille.fr/dataset.txt)
+
+Each line in the dataset is a tag followed by a sequence of 67 tokens representing an image. Each token is an integer code in [0, 1024].
+
+Example:
+```
+000d1f2aa107dbed4cea301effa6e0d8.png 0 152 276 348 643 1005 99 180 816 265 348 557 721 754 429 847 146 560 693 453 224 234 180 123 729 555 759 701 447 467 400 117 435 152 570 90 644 623 135 670 485 408 364 403 393 318 702 471 344 609 301 926 707 609 629 717 309 49 366 49 791 110 791 366 366 576 7
 ```
 
-Vous POUVEZ aussi utiliser des scripts python en local, et vous devrez évidemment faire les téléchargement en dehors du script, à la main.
+You MUST NOT learn the tag information. The tag is only provided as a name for the image.
 
-Vous DEVER utiliser aussi souvent la fonction de soumission de train:
+---
 
-```python
-lb.submit_training(train_acc, train_loss, {"num_epochs": num_epochs, "lr": lr, "something_else": 12}, tag=f"super net epoch {epoch}")
-```
+### Task Requirements
+#### 1. Rewriting the Transformer
+- Implement the transformer model architecture.
+- Again, contrarily to the text to image paper referenced, remove the text-conditioning pathway.
 
-Vous pouvez, une fois toutes les 12h, soumettre un test
+#### 2. Training the Transformer
+- Use the provided training set to optimize the model.
+- Implement teacher forcing to train the model in an autoregressive manner.
 
-```
-all_preds = {"file1.png": {"storm": -3.32, "doctorstrange": 0.2, ...}, ...}
-lb.submit_test(all_preds)
-```
+#### 3. Evaluating the Transformer
+- You should calculate the **perplexity** of the model on a validation set.
+- (Optional) Generate sample token sequences from the trained model and decode them back into images using the VQ-VAE.
 
-La soumission de test DOIT:
-- être un dictionnaire donc les clés sont les noms de fichier du test set, et auquel est associé...
-- ... un dictionnaire dont chaque clé est le nom de classe et la valeur est le *logit* prédit par le réseau. Toutes les classes doivent être présentes.
-- Cf exemple
-- J'insiste sur *logit*, sans softmax, donc.
+---
 
-Vous trouverez le résultat de vos soumissions, et de celles du reste de la classe, sur https://leaderboard.vermeille.fr/ . N'oubliez pas d'entrer votre token !
+### Submission Requirements
+You must submit your 
+---
 
-## Note sur la triche:
-* Toute triche avérée multipliera immédiatement votre note par 0. Je n'aime pas _du tout_ qu'on se foute de ma gueule.
-* Triche == copier-coller de code entre vous, 0 soumission de train, 1 seule soumission de test, soumission de test avec de fausses valeurs, soumissions de test identique à un camarade.
-* Je reste disponible en quasi permanence pour répondre à vos questions et vous aider, la triche est impardonnable.
+### Evaluation Criteria
+Your submission will be evaluated based on **Performance:** Quality of the trained model.
+You are provided with a test set to evaluate your model. The test set contains only sequence prefixes, and you need to predict the end of the sequence.
+If your model is properly trained, those will represent valid images. You are graded automatically on the the likelihood of your predictions (if your generated images are likely to be real images, NOT on the images aesthetics or quality).
+
+
+---
+
+### Guidelines
+- Use standard transformer libraries for building your model. You are not required to implement low-level operations like attention from scratch.
+- Pay attention to hyperparameters like learning rate, dropout, and attention heads, as they significantly affect training stability.
+- Collaborating with others is not allowed. Your work must be your own.
+- You may consult course materials and public resources but must cite any external references used.
+
+---
+
+### Additional Notes
+- You are **not** required to implement the VQ-VAE tokenization or decoding process; this will be provided.
+
+---
+
+# BONUS POINTS: Model interpretation
+
+Get up to 5 bonus points by doing some research on the image encodings. Try understanding how the model learned to encode and decode images:
+- What do tokens represent?
+- How do they relate to the original image?
+- Are some tokens favored in some locations? Does it depend on the image?
+- Are the tokens impacting the image locally or globally? Does it depend on the token?
+- Is there some kind of grammar? How do tokens relate to each other?
+- Can you find some interesting patterns in the tokens?
+- etc.
+
+Bonus points will be awarded based on the depth of your analysis and the quality of your findings.
+
+---
+
+Good luck, and may your transformers generate impressive results!
     </pre>
   <div id="content"></div>
   <script>
