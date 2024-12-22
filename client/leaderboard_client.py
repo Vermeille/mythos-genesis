@@ -15,7 +15,7 @@ except ImportError:
     USE_COLAB = False
 
 
-URL = "https://leaderboard.vermeille.fr"
+URL = "https://mythos-genesis.vermeille.fr"
 
 
 def _get_current_notebook():
