@@ -138,7 +138,7 @@ def download_code(submission_id, save_path):
 
 
 def render(tag, tokens):
-    assert len(tokens) == 67
+    assert len(tokens) == 257
     encoded = tag.replace(" ", "_") + " " + \
         " ".join([str(t) for t in tokens.tolist()])
     img = requests.get(f"{URL}/generate-images/", params=dict(codes=encoded))
