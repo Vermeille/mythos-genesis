@@ -65,6 +65,12 @@ def grade_submission(predictions):
         if not all(c1 == c2 for c1, c2 in zip(codes, test_ref[tag])):
             raise SubmissionError(f"Invalid prefix for {tag}")
 
+        if not len(codes) == 257:
+            raise SubmissionError(
+                (f"Invalid length for {tag} ({len(codes)},")
+                + (f"expected 257): {codes}")
+            )
+
         all_tokens.append(codes[1:])
         all_cls.append(codes[0])
 
