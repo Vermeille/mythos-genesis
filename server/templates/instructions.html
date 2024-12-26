@@ -46,7 +46,7 @@ You are provided with **a pre-tokenized image dataset:** This dataset contains i
 
 [LINK TO DATASET](https://files.vermeille.fr/dataset.txt)
 
-Each line in the dataset is a tag followed by a sequence of 67 tokens representing an image. Each token is an integer code in [0, 1024].
+Each line in the dataset is a tag followed by a sequence of 257 tokens representing an image. Each token is an integer code in [0, 1024].
 
 Example:
 ```
@@ -73,7 +73,22 @@ You MUST NOT learn the tag information. The tag is only provided as a name for t
 ---
 
 ### Submission Requirements
-You must submit your 
+You must download the client script and use it to submit your results.
+```
+!wget https://raw.githubusercontent.com/Vermeille/mythos-genesis/refs/heads/master/client/leaderboard_client.py
+```
+
+You must submit your training runs to the leaderboard using the provided client.
+```python
+import leaderboard_client as lb
+lb.submit_training(train_acc, train_loss, {"num_epochs": num_epochs, "lr": lr, "something_else": 12}, tag=f"super net epoch {epoch}")
+```
+
+You can get images rendered from tokens using the client. It will return a PIL image. You can google how to display PIL images in a notebook or locally.
+```python
+import leaderboard_client as lb
+pil_image = lb.render("my_image_tag", my_257_tokens)
+```
 ---
 
 ### Evaluation Criteria
@@ -81,7 +96,18 @@ Your submission will be evaluated based on **Performance:** Quality of the train
 You are provided with a test set to evaluate your model. The test set contains only sequence prefixes, and you need to predict the end of the sequence.
 If your model is properly trained, those will represent valid images. You are graded automatically on the the likelihood of your predictions (if your generated images are likely to be real images, NOT on the images aesthetics or quality).
 
+[LINK TO TEST DATASET](https://files.vermeille.fr/dataset-test.txt)
 
+You must submit your training runs to the leaderboard using the provided client.
+```python
+import leaderboard_client as lb
+# The keys are the tags of the images, the values are the 257 tokens
+all_predictions = {
+    "image1.png": [0, 53, 21...],
+    ...
+}
+lb.submit_test(all_predictions)
+```
 ---
 
 ### Guidelines
