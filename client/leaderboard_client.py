@@ -138,9 +138,12 @@ def download_code(submission_id, save_path):
 
 
 def render(tag, tokens):
+    if not isinstance(tokens, list):
+        # probably a tensor
+        tokens = tokens.tolist()
     assert len(tokens) == 257
     encoded = tag.replace(" ", "_") + " " + \
-        " ".join([str(t) for t in tokens.tolist()])
+        " ".join([str(t) for t in tokens])
     img = requests.get(f"{URL}/generate-images/", params=dict(codes=encoded))
     b = BytesIO(img.content)
     pil = Image.open(b)
