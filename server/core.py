@@ -1,5 +1,6 @@
 from typing import Annotated
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Request, status
 import logging
 from datetime import datetime, timedelta
@@ -8,6 +9,7 @@ import os
 import uuid
 import json
 from fastapi import (
+    BackgroundTasks,
     Cookie,
     Depends,
     HTTPException,
@@ -58,8 +60,7 @@ class Student(Base):
     name = Column(String)
     token = Column(String, unique=True)
 
-    training_submissions = relationship(
-        "TrainingSubmission", back_populates="student")
+    training_submissions = relationship("TrainingSubmission", back_populates="student")
     test_submissions = relationship("TestSubmission", back_populates="student")
 
     @property
@@ -124,15 +125,13 @@ def ensure_current_student(
     token = credentials.credentials
     student = db.query(Student).filter(Student.token == token).first()
     if student is None:
-        raise HTTPException(
-            status_code=401, detail="Invalid authentication token")
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
     return student
 
 
 def ensure_teacher(teacher: Student = Depends(ensure_current_student)):
     if teacher is None or not teacher.is_teacher:
-        raise HTTPException(
-            status_code=401, detail="Invalid authentication token")
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
     return teacher
 
 
@@ -148,8 +147,11 @@ def create_student(db: Session, name: str, token: str):
     return student, True
 
 
-def create_app(grading_fn):
+def create_app(grading_fn, after_submission=None):
     app = FastAPI()
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+    app.templates = templates
+    os.makedirs("static", exist_ok=True)
 
     # Endpoint to generate tokens (Teacher)
     @app.post("/generate_token")
@@ -231,6 +233,7 @@ def create_app(grading_fn):
     # Endpoint for students to submit test predictions (limited to 1 per day)
     @app.post("/test_submission")
     def submit_test(
+        after_tasks: BackgroundTasks,
         predictions: str = Form(...),
         student: Student = Depends(ensure_current_student),
         db: Session = Depends(get_db),
@@ -278,6 +281,8 @@ def create_app(grading_fn):
         db.add(submission)
         db.commit()
         db.refresh(submission)
+        if after_submission is not None:
+            after_tasks.add_task(after_submission, student, predictions)
         return {
             "message": "Test submission successful",
             "submission_id": submission.id,
@@ -319,8 +324,7 @@ def create_app(grading_fn):
 
         # Get test submissions, ordered by accuracy
         test_entries = (
-            db.query(TestSubmission).order_by(
-                TestSubmission.accuracy.desc()).all()
+            db.query(TestSubmission).order_by(TestSubmission.accuracy.desc()).all()
         )
         test_leaderboard = [
             {
@@ -358,8 +362,7 @@ def create_app(grading_fn):
         # Prepare data for the line plot
         # Group submissions by student
         student_submissions = {}
-        submissions = db.query(TestSubmission).order_by(
-            TestSubmission.timestamp).all()
+        submissions = db.query(TestSubmission).order_by(TestSubmission.timestamp).all()
         for submission in submissions:
             student_name = submission.student.name
             if student_name not in student_submissions:
@@ -395,8 +398,7 @@ def create_app(grading_fn):
             .first()
         )
         if teacher.id != submission.student_id and teacher.name != "Teacher":
-            raise HTTPException(
-                status_code=401, detail="Invalid authentication token")
+            raise HTTPException(status_code=401, detail="Invalid authentication token")
 
         if submission is None:
             raise HTTPException(status_code=404, detail="Submission not found")

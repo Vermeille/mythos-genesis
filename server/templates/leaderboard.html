@@ -27,6 +27,7 @@
     <button id="toggleScale">Toggle linear / log scale</button>
     <hr>
     <a href="/instructions.html">Instructions</a><br>
+    <a href="/gallery">Gallery</a><br>
     {% if student %}
       <p>Hello {{ student.name }}</p>
     {% else %}
@@ -47,7 +48,11 @@
       <tbody>
       {% for entry in training_leaderboard %}
         <tr>
-          <td>{{ '%.2f' % ((entry.accuracy * 100) if entry.accuracy < 1 else entry.accuracy) }}%</td>
+          {% if entry.accuracy is not none %}
+            <td>{{ '%.2f' % ((entry.accuracy * 100) if entry.accuracy < 1 else entry.accuracy) }}%</td>
+          {% else %}
+            <td>YOU HAD ONE JOB {{ entry.accuracy }}</td>
+          {% endif %}
           <td>{{ entry.student_name }}</td>
           <td>{{ entry.tag }}</td>
           <td>{{ entry.timestamp }}</td>
@@ -153,7 +158,7 @@
             ticks: {
               callback: function(value) {
                 //return `${value}`;
-                return `${value}% (${Math.max(0, (20 - 20 * (value / 100) ** 0.5)).toFixed(1)})`;
+                return `${value}% (${Math.max(0, (20 - 20 * (value / 100) ** 0.95)).toFixed(1)})`;
               }
             }
           },
